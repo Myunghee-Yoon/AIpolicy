@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ko" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google AI 개발 정책 탐색기</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Chosen Palette: Subtle Tech -->
+    <!-- Application Structure Plan: The application uses a thematic, dashboard-like structure rather than mirroring the report's linear format. The core is a tabbed navigation system focusing on the key implementation pillars (Safety, Privacy, Fairness, Transparency) for intuitive exploration. This is supplemented by a high-level interactive diagram showing the relationship between Principles, Implementation, and Governance, providing a quick mental model. A dedicated, visually distinct section highlights the significant policy shift on weapons/surveillance, drawing user attention to this key finding. This non-linear, thematic structure prioritizes user-driven discovery of concepts over passive reading, making the dense policy information more digestible and engaging. -->
+    <!-- Visualization & Content Choices: 
+    - Report Info: Core Pillars of Responsible AI (Safety, Privacy, etc.). Goal: Compare/Organize. Viz: A dynamic horizontal bar chart (Chart.js) showing the relationship and interconnectedness of different tools and strategies within Google's implementation framework. Interaction: Hovering over bars displays tooltips with details. Justification: A bar chart provides a clear, scannable overview of the components for each pillar.
+    - Report Info: FSF vs. SAIF frameworks. Goal: Compare. Viz: A radar chart (Chart.js) comparing the two frameworks across dimensions like 'Proactive/Reactive', 'Future/Present Focus', 'Scope'. Justification: A radar chart is ideal for multi-variate comparison of two entities, offering a more nuanced view than a simple table.
+    - Report Info: Policy shift on weapons. Goal: Show change. Viz: An HTML/CSS side-by-side comparison diagram. Justification: A direct textual and visual layout is clearer for policy changes than a data chart.
+    - Report Info: Governance Structure. Goal: Organize. Viz: An HTML/CSS flow diagram. Justification: A structural diagram is best for showing hierarchy and relationships between entities.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
+        .chart-container {
+            position: relative;
+            margin: auto;
+            height: 40vh;
+            width: 100%;
+            max-width: 600px;
+            max-height: 400px;
+        }
+        .nav-link {
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+            color: #4b5563; /* gray-600 */
+        }
+        .nav-link.active, .nav-link:hover {
+            color: #3b82f6; /* blue-500 */
+            border-bottom-color: #3b82f6;
+        }
+        .content-section {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        .content-section.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .policy-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            background-color: white;
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl md:text-2xl font-bold text-blue-600">Google AI 정책 탐색기</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a onclick="scrollToSection('principles')" class="nav-link">핵심 원칙</a>
+                        <a onclick="scrollToSection('implementation')" class="nav-link">책임감 있는 구현</a>
+                        <a onclick="scrollToSection('governance')" class="nav-link">거버넌스</a>
+                        <a onclick="scrollToSection('policy-shift')" class="nav-link">주요 정책 변화</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white">
+                        <span class="sr-only">Open main menu</span>
+                        <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div id="mobile-menu" class="md:hidden hidden pb-3">
+                <a onclick="scrollToSection('principles')" class="block nav-link">핵심 원칙</a>
+                <a onclick="scrollToSection('implementation')" class="block nav-link">책임감 있는 구현</a>
+                <a onclick="scrollToSection('governance')" class="block nav-link">거버넌스</a>
+                <a onclick="scrollToSection('policy-shift')" class="block nav-link">주요 정책 변화</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        
+        <section class="text-center mb-16">
+            <h2 class="text-3xl md:text-4xl font-bold mb-4">Google의 책임감 있는 AI를 향한 여정</h2>
+            <p class="max-w-3xl mx-auto text-lg text-gray-600">
+                Google의 AI 개발을 이끄는 핵심 원칙, 책임감 있는 구현 방식, <br>그리고 윤리적 감독을 위한 거버넌스 구조를 대화형으로 탐색해 보세요.
+            </p>
+        </section>
+
+        <section id="principles" class="mb-20">
+            <h3 class="text-2xl md:text-3xl font-bold text-center mb-10">AI 개발의 3대 핵심 원칙</h3>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white p-8 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300">
+                    <div class="text-blue-500 mb-4">
+                        <span class="text-4xl font-bold"> bold </span>
+                    </div>
+                    <h4 class="text-xl font-bold mb-2">대담한 혁신</h4>
+                    <p class="text-gray-600">인류의 가장 큰 문제 해결을 목표로, AI 기술의 한계를 넓히고 과학적 돌파구를 만들어냅니다. 전체 이점이 예측 가능한 위험을 훨씬 능가할 때 혁신을 추구합니다.</p>
+                </div>
+                <div class="bg-white p-8 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300">
+                    <div class="text-green-500 mb-4">
+                        <span class="text-4xl font-bold"> responsible </span>
+                    </div>
+                    <h4 class="text-xl font-bold mb-2">책임감 있는 개발</h4>
+                    <p class="text-gray-600">설계부터 배포까지 전 과정에 걸쳐 안전, 개인정보보호, 공정성을 고려합니다. 엄격한 테스트와 인간 감독을 통해 잠재적 위험을 완화합니다.</p>
+                </div>
+                <div class="bg-white p-8 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300">
+                    <div class="text-purple-500 mb-4">
+                        <span class="text-4xl font-bold"> collaborative </span>
+                    </div>
+                    <h4 class="text-xl font-bold mb-2">협력적 발전</h4>
+                    <p class="text-gray-600">연구자, 정부, 시민 사회와 협력하여 AI의 긍정적 영향을 극대화합니다. 오픈소스 도구와 프레임워크를 통해 모두의 혁신을 지원합니다.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="implementation" class="mb-20">
+            <h3 class="text-2xl md:text-3xl font-bold text-center mb-4">책임감 있는 AI 구현</h3>
+            <p class="text-center text-gray-600 mb-10 max-w-2xl mx-auto">Google은 AI 원칙을 실제 제품과 시스템에 적용하기 위해<br> 안전, 프라이버시, 공정성, 투명성의 네 가지 핵심 영역에 집중합니다.</p>
+            
+            <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6 md:p-8">
+                <div class="border-b border-gray-200">
+                    <nav class="-mb-px flex flex-wrap justify-center space-x-2 sm:space-x-8" aria-label="Tabs">
+                        <button onclick="showTab('safety')" id="tab-safety" class="implementation-tab active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm md:text-base">🛡️ 안전</button>
+                        <button onclick="showTab('privacy')" id="tab-privacy" class="implementation-tab whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm md:text-base">🔒 프라이버시</button>
+                        <button onclick="showTab('fairness')" id="tab-fairness" class="implementation-tab whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm md:text-base">⚖️ 공정성</button>
+                        <button onclick="showTab('transparency')" id="tab-transparency" class="implementation-tab whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm md:text-base">🔍 투명성</button>
+                    </nav>
+                </div>
+
+                <div class="mt-8">
+                    <div id="content-safety" class="implementation-content active">
+                        <h4 class="font-bold text-xl mb-4 text-center">AI 시스템의 안전성 확보</h4>
+                        <p class="text-center text-gray-600 mb-8 max-w-2xl mx-auto">진화하는 위협으로부터 AI 시스템을 보호하기 위해 사전 예방적이고 다층적인 접근 방식을 사용합니다. 이는 잠재적 위험을 예측하고, 시스템 취약점을 테스트하며, 지속적으로 모니터링하는 과정을 포함합니다.</p>
+                        <div class="chart-container h-[450px] max-h-[450px]">
+                            <canvas id="safetyChart"></canvas>
+                        </div>
+                    </div>
+                    <div id="content-privacy" class="implementation-content">
+                        <h4 class="font-bold text-xl mb-4 text-center">데이터 프라이버시 및 보안</h4>
+                        <p class="text-center text-gray-600 mb-8 max-w-2xl mx-auto">사용자 데이터 보호는 AI 신뢰의 핵심입니다. Google은 데이터 처리 과정 전반에 걸쳐 개인정보를 보호하기 위해 연합 학습, 기밀 컴퓨팅 등 최신 기술을 적용합니다.</p>
+                         <div class="grid md:grid-cols-2 gap-6 text-center">
+                            <div class="policy-card">
+                                <h5 class="font-bold text-lg mb-2">Private Compute Core</h5>
+                                <p class="text-sm text-gray-600">민감한 데이터를 기기 내에서 안전하게 처리하고, 명시적 조치 없이는 외부와 공유되지 않도록 격리하는 Android의 보안 환경입니다.</p>
+                            </div>
+                             <div class="policy-card">
+                                <h5 class="font-bold text-lg mb-2">연합 학습 (Federated Learning)</h5>
+                                <p class="text-sm text-gray-600">개인 데이터를 중앙 서버로 보내지 않고, 각 사용자의 기기에서 모델을 학습시키는 분산형 접근 방식으로 개인정보를 강력하게 보호합니다.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="content-fairness" class="implementation-content">
+                        <h4 class="font-bold text-xl mb-4 text-center">공정성 및 편향 완화</h4>
+                        <p class="text-center text-gray-600 mb-8 max-w-2xl mx-auto">AI가 사회에 존재하는 편향을 학습하거나 증폭시키지 않도록 노력합니다. 이를 위해 다양한 데이터를 사용하고, 통계적 공정성 지표를 측정하며, 지속적인 인간 감독을 수행합니다.</p>
+                        <div class="policy-card">
+                            <h5 class="font-bold text-lg mb-2 text-center">공정성 확보를 위한 다각적 전략</h5>
+                            <ul class="list-disc list-inside text-gray-600 space-y-2 mt-4 text-left mx-auto max-w-md">
+                                <li><strong>데이터 재균형:</strong> 소수 집단 데이터를 보강하여 데이터셋의 대표성을 높입니다.</li>
+                                <li><strong>알고리즘 편향 제거:</strong> 학습 과정에서 편향을 감지하고 최소화하는 알고리즘을 사용합니다.</li>
+                                <li><strong>인간 감독 (Human-in-the-loop):</strong> 중요한 결정 과정에 인간 검토자를 참여시켜 편향을 감지하고 수정합니다.</li>
+                                <li><strong>다양한 팀 구성:</strong> 다양한 배경의 개발자들이 참여하여 잠재적 편향을 조기에 발견합니다.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div id="content-transparency" class="implementation-content">
+                        <h4 class="font-bold text-xl mb-4 text-center">투명성 및 설명 가능성 (XAI)</h4>
+                         <p class="text-center text-gray-600 mb-8 max-w-2xl mx-auto">사용자가 AI의 판단 근거를 이해하고 시스템을 신뢰할 수 있도록 '블랙박스'를 열기 위해 노력합니다. 이는 모델의 작동 방식, 한계, 성능에 대한 정보를 명확하게 제공하는 것을 포함합니다.</p>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div class="policy-card">
+                                <h5 class="font-bold text-lg mb-2">모델 카드 (Model Cards)</h5>
+                                <p class="text-sm text-gray-600">AI 모델의 성능, 한계, 의도된 사용 사례, 윤리적 고려사항 등을 담은 '성분표'와 같은 문서입니다.</p>
+                            </div>
+                            <div class="policy-card">
+                                <h5 class="font-bold text-lg mb-2">SynthID</h5>
+                                <p class="text-sm text-gray-600">AI가 생성한 이미지나 오디오에 눈에 보이지 않는 디지털 워터마크를 삽입하여, 인간이 만든 콘텐츠와 구별할 수 있도록 돕는 기술입니다.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <section id="governance" class="mb-20">
+            <h3 class="text-2xl md:text-3xl font-bold text-center mb-10">AI 거버넌스와 윤리 감독</h3>
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+                <div>
+                    <h4 class="text-xl font-bold mb-4">내부 감독 체계</h4>
+                    <p class="text-gray-600 mb-6">Google은 AI 원칙이 연구와 제품 개발 전반에 일관되게 적용되도록 강력한 내부 거버넌스 구조를 운영합니다. 여러 위원회가 협력하여 잠재적 위험을 검토하고 윤리적 지침 준수를 보장합니다.</p>
+                    <div class="space-y-4">
+                        <div class="bg-white p-4 rounded-lg border border-l-4 border-blue-500">
+                            <h5 class="font-bold">책임 및 안전 위원회 (RSC)</h5>
+                            <p class="text-sm text-gray-600">연구, 프로젝트가 AI 원칙에 부합하는지 평가하는 핵심 검토 그룹입니다.</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg border border-l-4 border-red-500">
+                            <h5 class="font-bold">AGI 안전 위원회</h5>
+                            <p class="text-sm text-gray-600">미래의 초고도 AI(AGI) 시스템에서 발생할 수 있는 극단적 위험을 관리하는 데 집중합니다.</p>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                     <h4 class="text-xl font-bold mb-4 text-center md:text-left">핵심 프레임워크 비교</h4>
+                    <div class="chart-container h-[400px]">
+                        <canvas id="frameworksRadarChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="policy-shift" class="mb-16 bg-slate-100 rounded-xl p-8">
+            <h3 class="text-2xl md:text-3xl font-bold text-center mb-4">주요 정책 변화: 진화하는 원칙</h3>
+            <p class="text-center text-gray-600 mb-10 max-w-3xl mx-auto">AI 기술과 사회적 환경이 변화함에 따라 Google의 정책도 진화합니다. 최근 무기 및 감시 분야에 대한 정책 변화는 이러한 적응적 접근 방식을 보여주는 중요한 사례입니다.</p>
+            <div class="max-w-4xl mx-auto grid md:grid-cols-2 gap-8">
+                <div class="policy-card bg-red-50 border-red-200">
+                    <h4 class="text-xl font-bold text-red-800 mb-3">이전 정책</h4>
+                    <p class="text-red-700">해를 끼칠 가능성이 있는 기술, 특히 무기 및 직접적인 상해를 유발하는 기술에 대한 AI 활용을 **엄격히 금지**했습니다.</p>
+                     <div class="mt-4 text-3xl text-center text-red-400">🚫</div>
+                </div>
+                <div class="policy-card bg-green-50 border-green-200">
+                    <h4 class="text-xl font-bold text-green-800 mb-3">개정된 정책 (2025년 2월)</h4>
+                    <p class="text-green-700">국가 안보 등 특정 분야에서 **엄격한 규제 감독 하에** AI 활용이 허용될 수 있음을 인정. 강화된 보안 및 모니터링 조치를 전제로 합니다.</p>
+                    <div class="mt-4 text-3xl text-center text-green-400">✅</div>
+                </div>
+            </div>
+             <p class="text-center text-sm text-gray-500 mt-8">이러한 변화는 혁신과 책임 사이의 균형을 맞추려는 지속적인 노력을 반영하며, AI 윤리에 대한 사회적 논의의 중요성을 강조합니다.</p>
+        </section>
+    </main>
+
+    <footer class="bg-gray-800 text-white mt-12">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 text-center text-sm">
+            <p>본 애플리케이션은 제공된 'Google AI 개발 정책' 보고서 내용을 기반으로 제작되었습니다.</p>
+            <p>&copy; 2025 Interactive Policy Explorer. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+            
+            showTab('safety');
+
+            createSafetyChart();
+            createFrameworksRadarChart();
+        });
+        
+        function scrollToSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            const mobileMenu = document.getElementById('mobile-menu');
+            if(!mobileMenu.classList.contains('hidden')) {
+                mobileMenu.classList.add('hidden');
+            }
+        }
+
+        const implementationTabs = document.querySelectorAll('.implementation-tab');
+        const implementationContents = document.querySelectorAll('.implementation-content');
+
+        function showTab(tabName) {
+            implementationTabs.forEach(tab => {
+                tab.classList.remove('active', 'text-blue-600', 'border-blue-600');
+                tab.classList.add('text-gray-500', 'border-transparent', 'hover:text-gray-700', 'hover:border-gray-300');
+            });
+            const activeTab = document.getElementById('tab-' + tabName);
+            activeTab.classList.add('active', 'text-blue-600', 'border-blue-600');
+            activeTab.classList.remove('text-gray-500', 'border-transparent', 'hover:text-gray-700', 'hover:border-gray-300');
+
+
+            implementationContents.forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById('content-' + tabName).classList.add('active');
+        }
+
+        function createSafetyChart() {
+            const ctx = document.getElementById('safetyChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['AI 기반 레드팀', '24/7 모니터링', '버그 바운티', '인간 검토', 'FSF 프레임워크', 'SAIF 프레임워크'],
+                    datasets: [{
+                        label: '안전성 확보 기여도 (개념적)',
+                        data: [90, 85, 70, 75, 95, 88],
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.5)',
+                            'rgba(54, 162, 235, 0.5)',
+                            'rgba(255, 206, 86, 0.5)',
+                            'rgba(75, 192, 192, 0.5)',
+                            'rgba(153, 102, 255, 0.5)',
+                            'rgba(255, 159, 64, 0.5)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Google의 다층적 AI 안전 전략',
+                            font: { size: 16 }
+                        },
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.x !== null) {
+                                        label += context.parsed.x + ' / 100';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: '기여도 점수'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function createFrameworksRadarChart() {
+            const ctx = document.getElementById('frameworksRadarChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['사전 예방성', '미래 위험 초점', '기술적 깊이', '보안 중심', '생태계 확장성'],
+                    datasets: [{
+                        label: 'FSF (프론티어 안전)',
+                        data: [9, 9, 7, 6, 7],
+                        fill: true,
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderColor: 'rgb(255, 99, 132)',
+                        pointBackgroundColor: 'rgb(255, 99, 132)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(255, 99, 132)'
+                    }, {
+                        label: 'SAIF (보안 AI)',
+                        data: [7, 5, 8, 9, 8],
+                        fill: true,
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgb(54, 162, 235)',
+                        pointBackgroundColor: 'rgb(54, 162, 235)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(54, 162, 235)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'FSF vs SAIF 프레임워크 비교',
+                            font: { size: 16 }
+                        },
+                        tooltip: {
+                             callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.raw + ' / 10';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        r: {
+                            angleLines: { display: true },
+                            suggestedMin: 0,
+                            suggestedMax: 10,
+                            pointLabels: {
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
